@@ -1,17 +1,17 @@
-import React, { useMemo, useState } from "react";
-import * as PopoverPrimitives from "@radix-ui/react-popover";
-import { DateRange, PropsSingle } from "react-day-picker";
-import { Locale, format } from "date-fns";
 import { usePopover } from "@/hooks/use-popover";
-import { Calendar, CalendarProps } from "./calendar";
-import { Button } from "./button";
-import { Flyout } from "./flyout";
+import { format } from "date-fns";
+import { useState } from "react";
+import { DateRange, PropsRange } from "react-day-picker";
+import * as PopoverPrimitives from "@radix-ui/react-popover";
 import { Trigger } from "./trigger";
+import { Flyout } from "./flyout";
+import { Calendar } from "./calendar";
+import { Button } from "./button";
 
-interface DatePickerProps
-  extends Omit<PropsSingle, "selected" | "onSelect" | "mode"> {
-  value: Date | undefined;
-  onChange: (date: Date | undefined) => void;
+interface DateRangePickerProps
+  extends Omit<PropsRange, "selected" | "onSelect" | "mode"> {
+  value: DateRange | undefined;
+  onChange: (date: DateRange | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -21,38 +21,46 @@ interface DatePickerProps
   "aria-labelledby"?: string;
 }
 
-export const DatePicker = ({
-  value: initialDate,
+export const DateRangePicker = ({
+  value: initialDateRange,
   onChange,
   placeholder,
   disabled,
   className,
   ...props
-}: DatePickerProps) => {
-  const [date, setDate] = useState<Date | undefined>(initialDate);
+}: DateRangePickerProps) => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    initialDateRange
+  );
 
   const popover = usePopover();
 
   const onCancel = () => {
     popover.close();
-    setDate(initialDate);
+    setDateRange(initialDateRange);
   };
 
   const onApply = () => {
-    onChange(date);
+    onChange(dateRange);
     popover.close();
   };
 
   const onOpenChange = (open: boolean) => {
     popover.onOpenChange(open);
-    setDate(initialDate);
+    setDateRange(initialDateRange);
   };
 
-  const onDateChange = (date?: Date) => {
-    setDate(date);
+  const onDateRangeChange = (dateRange?: DateRange) => {
+    setDateRange(dateRange);
   };
 
-  const formattedDate = date ? format(date, "yyyy-MM-dd") : null;
+  const dateRangeFrom =
+    dateRange && dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "";
+
+  const dateRangeTo =
+    dateRange && dateRange.to ? ` ~ ${format(dateRange.to, "yyyy-MM-dd")}` : "";
+
+  const formattedDate = dateRange ? `${dateRangeFrom}${dateRangeTo}` : null;
 
   return (
     <PopoverPrimitives.Root open={popover.isOpen} onOpenChange={onOpenChange}>
@@ -71,9 +79,10 @@ export const DatePicker = ({
         <div className="flex flex-col">
           <div className="p-3">
             <Calendar
-              mode="single"
-              selected={date}
-              onSelect={onDateChange}
+              mode="range"
+              selected={dateRange}
+              onSelect={onDateRangeChange}
+              disabled={disabled}
               {...props}
             />
           </div>
